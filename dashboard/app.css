@@ -56,6 +56,7 @@ nav button:hover, nav button[aria-current] { color: #fff; border-bottom-color: #
 .segments button[aria-pressed="true"] { background: var(--paper); border-color: var(--line); color: var(--blue); }
 .filters { padding-top: 0; justify-content: start; align-items: end; }
 .filters label { min-width: 145px; display: grid; gap: 4px; color: var(--muted); font-size: 12px; }
+.peerFilters { padding-top: 16px; }
 .filters .search { min-width: 220px; flex: .6; }
 .filters input, .filters select { color: var(--ink); padding: 7px 9px; width: 100%; min-height: 35px; border-radius: 5px; border: 1px solid #c4d3e2; background: var(--paper); }
 .filters .check { display: flex; align-items: center; min-width: 0; min-height: 35px; gap: 5px; white-space: nowrap; }

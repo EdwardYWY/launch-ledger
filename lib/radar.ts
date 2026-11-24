@@ -104,7 +104,6 @@ export function buildRadar(snapshot: Snapshot) {
   const traded = snapshot.protocols.filter(live);
   const comparables = traded
     .sort((a, b) => (b.mcap_usd ?? 0) - (a.mcap_usd ?? 0) || (a.slug < b.slug ? -1 : 1))
-    .slice(0, 30)
     .map(p => ({ name: p.name, category: sector(p), symbol: p.symbol, tvl: p.tvl_usd, mcap: p.mcap_usd }));
 
   return {

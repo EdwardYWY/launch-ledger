@@ -23,7 +23,7 @@
     <div class="stamp">DefiLlama snapshot <b id="date"></b></div>
   </header>
   <main id="main" class="shell">
-    <section id="board" aria-labelledby="board-heading">
+    <section id="board" aria-labelledby="board-heading" hidden>
       <div class="hero">
         <div>
           <h1 id="board-heading">Token launch radar</h1>
@@ -79,8 +79,10 @@
     </section>
     <section id="peers" hidden>
       <div class="hero"><div><h1>Traded peers</h1><p id="peer-note"></p></div></div>
-      <section class="boardCard tableScroll" aria-label="Traded comparables">
-        <table><thead><tr><th scope="col">Protocol</th><th scope="col">Sector</th><th scope="col" class="num">TVL</th><th scope="col" class="num">Market cap</th></tr></thead><tbody id="peer-rows"></tbody></table>
+      <section class="boardCard" aria-label="Traded comparables">
+        <div class="filters peerFilters"><label class="search">Find a token-bearing protocol<input id="peer-query" type="search" placeholder="Name, symbol or sector"></label></div>
+        <div class="tableScroll"><table><thead><tr><th scope="col">Protocol</th><th scope="col">Sector</th><th scope="col" class="num">TVL</th><th scope="col" class="num">Market cap</th></tr></thead><tbody id="peer-rows"></tbody></table></div>
+        <div class="tableFoot"><span id="peer-count" aria-live="polite"></span><button id="peer-more" class="quiet">Show more</button></div>
       </section>
     </section>
     <section id="method" hidden>
@@ -92,7 +94,7 @@
         <article class="panel"><h2>Scenario range</h2><p>The central estimate is divided and multiplied by a 1.5–2.2× band. Missing inputs, fewer than five sector peers or a review flag widen it. The range shows uncertainty in the valuation assumptions. Listing dates measure tracking history, and token metadata can be incomplete.</p></article>
       </div>
     </section>
-    <p id="error" class="panel" role="alert" hidden>Dashboard data is missing. Build the radar from the supplied snapshot, then open the generated dashboard.</p>
+    <p id="error" class="panel" role="alert" hidden>The dashboard could not open its snapshot archive. Build it from the supplied snapshot and open the generated page in a current browser.</p>
   </main>
 </body>
 </html>

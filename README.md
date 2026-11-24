@@ -16,7 +16,7 @@ node main.ts --input /path/to/snapshot.json --output out
 
 Open `out/dashboard/index.html` directly in a browser. The output includes the ranked `board.json`, three screenshots, and the make.fun `dossier.json`. Use `--preview` when regenerating the dashboard and board before capturing updated screenshots.
 
-Filter the radar and choose **Compare top two** to evaluate the leading matches under a shared TVL change, with each scenario band and route-preview cost visible.
+Filter the radar and choose **Compare top two** to evaluate the leading matches under a shared TVL change, with each scenario band and route-preview cost visible. Use **Traded peers** to search every token-bearing record separately from the launch ranking.
 
 ## How it ranks
 

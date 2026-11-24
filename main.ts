@@ -1,6 +1,7 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gzipSync } from 'node:zlib';
 import { buildRadar, type Snapshot } from './lib/radar.ts';
 import { buildDossier } from './vendor/makefun-board.ts';
 import './dashboard/plans.js';
@@ -41,28 +42,26 @@ for (const row of rows) {
 mkdirSync(output, { recursive: true });
 const dashboard = join(output, 'dashboard');
 cpSync(join(root, 'dashboard'), dashboard, { recursive: true });
-const { ranked, ...metadata } = radar;
+const { ranked, comparables, ...metadata } = radar;
 const fields = (Object.keys(ranked[0]) as (keyof (typeof ranked)[number])[])
   .filter(field => field !== 'rank' && field !== 'issuedAsset' && field !== 'value');
-const categories = [...new Set(ranked.map(row => row.category))];
+const categories = [...new Set([...ranked, ...comparables].map(row => row.category))];
 const chains = [...new Set(ranked.flatMap(row => row.chains))];
 const routes = [...new Set(ranked.map(row => row.route))];
 const categoryIds = new Map(categories.map((name, index) => [name, index]));
 const chainIds = new Map(chains.map((name, index) => [name, index]));
 const issuedAssets = Object.fromEntries(ranked.filter(row => row.issuedAsset).map(row => [row.slug, row.issuedAsset]));
-const asJson = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 const records = ranked.map(row => {
   const packed = {
     ...row, category: categoryIds.get(row.category), chains: row.chains.map(chain => chainIds.get(chain)),
     route: routes.indexOf(row.route), status: row.status === 'watchlist' ? 1 : 0, review: row.review ? 1 : 0,
   };
-  return asJson(fields.map(field => packed[field]));
+  return fields.map(field => packed[field]);
 });
-const comparables = radar.comparables.map(({ name, category, symbol, tvl, mcap }) => [name, category, symbol, tvl, mcap]);
-writeFileSync(join(dashboard, 'z-data.js'),
-  `globalThis.launchData = ${asJson({ ...metadata, categories, chains, routes, issuedAssets, comparables })};\n` +
-  `globalThis.launchFields = ${asJson(fields)};\n` +
-  `globalThis.launchRecords = [\n${records.join(',\n')}\n];\n`);
+const trades = comparables.map(({ name, category, symbol, tvl, mcap }) =>
+  [name, categoryIds.get(category), symbol, Math.round(tvl / 10_000), mcap === null ? null : Math.round(mcap / 10_000)]);
+const archive = gzipSync(JSON.stringify({ ...metadata, categories, chains, routes, issuedAssets, fields, records, trades }), { level: 9 });
+writeFileSync(join(dashboard, 'z-data.js'), `globalThis.launchArchive = "${archive.toString('base64')}";\n`);
 writeFileSync(join(output, 'board.json'), JSON.stringify({ as_of: snapshot.as_of, rows }) + '\n');
 
 const screenshots = join(root, 'screenshots');

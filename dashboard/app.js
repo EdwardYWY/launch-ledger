@@ -1,20 +1,17 @@
-(() => {
+(async () => {
   const pick = selector => document.querySelector(selector);
   const all = selector => [...document.querySelectorAll(selector)];
-  const data = globalThis.launchData;
-  if (!data) {
-    pick('#board').hidden = true;
-    pick('#error').hidden = false;
-    return;
-  }
+  const bytes = Uint8Array.from(atob(globalThis.launchArchive), char => char.charCodeAt(0));
+  const uncompressed = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  const data = await new Response(uncompressed).json();
   function valueFor(row, tvl = row.tvl) {
     const { sectors, globalMedian } = data.references;
     const sample = Object.hasOwn(sectors, row.category) ? sectors[row.category] : undefined;
     return globalThis.launchValue(tvl, row.age, row.growth, sample, globalMedian);
   }
 
-  data.ranked = globalThis.launchRecords.map((record, index) => {
-    const row = Object.fromEntries(globalThis.launchFields.map((field, column) => [field, record[column]]));
+  data.ranked = data.records.map((record, index) => {
+    const row = Object.fromEntries(data.fields.map((field, column) => [field, record[column]]));
     row.category = data.categories[row.category];
     row.chains = row.chains.map(index => data.chains[index]);
     row.route = data.routes[row.route];
@@ -50,9 +47,22 @@
     stat(`${data.watchCovered} of ${data.watch}`, 'Official watchlist') +
     stat(integer.format(data.tradedCount), 'Token-bearing set aside');
   pick('#board-note').textContent = `All ${data.watch} required slugs included · ${money(data.floor)} watchlist floor · values model a separate token launch`;
-  pick('#peer-note').textContent = `Showing ${data.comparables.length} of ${data.tradedCount} token-bearing protocols, ordered by snapshot market cap. These records sit outside the launch ranking and inform the valuation model.`;
-  pick('#method-note').textContent = `The official watchlist contains ${data.watch} records at a ${money(data.floor)} TVL floor. Its rules exclude bridges and wrapped or staked products such as WBTC and Binance staked ETH. Every required slug is retained. The radar flags known issued assets and displays the largest token-bearing records in Traded peers.`;
-  pick('#peer-rows').innerHTML = data.comparables.map(([name, category, symbol, tvl, mcap]) => `<tr><td><strong>${safe(name)}</strong><small>${safe(symbol ?? 'Token record available')}</small></td><td>${safe(category)}</td><td class="num">${money(tvl)}</td><td class="num">${money(mcap)}</td></tr>`).join('');
+  pick('#peer-note').textContent = `Browse all ${data.tradedCount} token-bearing records separately. Table values are rounded to $10,000. The model uses exact snapshot figures for eligible peers.`;
+  pick('#method-note').textContent = `The official watchlist contains ${data.watch} records at a ${money(data.floor)} TVL floor. Its rules exclude bridges and wrapped or staked products such as WBTC and Binance staked ETH. Every required slug is retained. The Traded peers view shows all token-bearing records, with known related assets flagged on the radar.`;
+  let peerLimit = 16;
+  function renderPeers() {
+    const query = pick('#peer-query').value.trim().toLowerCase();
+    const rows = data.trades.filter(([name, category, symbol]) =>
+      [name, data.categories[category], symbol].some(value => value?.toLowerCase().includes(query)));
+    const shown = rows.slice(0, peerLimit);
+    pick('#peer-rows').innerHTML = shown.map(([name, category, symbol, tvl, mcap]) =>
+      `<tr><td><strong>${safe(name)}</strong><small>${safe(symbol ?? 'Token record available')}</small></td><td>${safe(data.categories[category])}</td><td class="num">${money(tvl * 10_000)}</td><td class="num">${money(mcap === null ? null : mcap * 10_000)}</td></tr>`).join('');
+    pick('#peer-count').textContent = `${shown.length} of ${rows.length} matching records`;
+    pick('#peer-more').hidden = shown.length >= rows.length;
+  }
+  pick('#peer-query').addEventListener('input', () => { peerLimit = 16; renderPeers(); });
+  pick('#peer-more').addEventListener('click', () => { peerLimit += 16; renderPeers(); });
+  renderPeers();
 
   function populate(selector, values) {
     const ordered = [...new Set(values)].sort((a, b) => a.localeCompare(b));
@@ -249,4 +259,8 @@
     if (slug && rowBySlug.has(slug)) showDetail(rowBySlug.get(slug));
   });
   render();
-})();
+  activate('board');
+})().catch(error => {
+  document.querySelector('#error').hidden = false;
+  console.error(error);
+});
