@@ -20,7 +20,7 @@ Open `out/dashboard/index.html` directly in a browser. The output includes the r
 
 Each central estimate multiplies TVL by a peer multiple, a tracking-age factor, and a bounded seven-day TVL momentum factor. The peer multiple blends sector and global medians to reduce the influence of sparse sectors. Traded peers have a separate view. The range widens when evidence is thin or classification needs review. These estimates describe a hypothetical circulating market cap if a token launches.
 
-The farm plans use sector-specific research steps and draw on product documentation for the leading vault routes. [Sentora vault overview](https://www.sec.gov/files/ctf-memo-sentora-081026.pdf) · [Steakhouse Prime Instant](https://www.steakhouse.financial/docs/products/vault-products/current/prime-instant) · [Gauntlet vaults on Morpho](https://app.morpho.org/curator/gauntlet) · [Veda vault components](https://docs.veda.tech/architecture-and-flow-of-funds/core-components)
+The farm plans use sector-specific research steps and draw on primary product documentation. [Sentora vault overview](https://www.sec.gov/files/ctf-memo-sentora-081026.pdf) · [Steakhouse Prime Instant](https://www.steakhouse.financial/docs/products/vault-products/current/prime-instant) · [Gauntlet vaults on Morpho](https://app.morpho.org/curator/gauntlet) · [Veda vault components](https://docs.veda.tech/architecture-and-flow-of-funds/core-components) · [Upshift redemption paths](https://docs.upshift.finance/introduction/integration-guide) · [USDD user guide](https://docs.usdd.io/user-guide/getting-started) · [OnRe and ONyc](https://docs.onre.finance/introduction/onre-tokenized-reinsurance-onyc)
 
 ---
 

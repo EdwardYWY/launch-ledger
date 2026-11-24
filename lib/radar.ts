@@ -26,6 +26,9 @@ const live = (p: Protocol) => Boolean(p.symbol || p.gecko_id || p.mcap_usd);
 const sector = (p: Protocol) => p.category ?? 'Unclassified';
 const nonStandalone = /^(?:bridges?|canonical bridge|cross chain bridge|liquid staking|liquid restaking|staking pool|restaked btc|anchor btc|decentralized btc|stablecoin wrapper|cex)$/i;
 const wrappedName = /\b(?:wrapped|staked|staking|bridged)\b|^(?:Binance|Coinbase|Bybit|Kraken|Bitget|OKX|Bitfinex|Gemini)\b|\s(?:v\d+|\d+\.\d+)$/i;
+// Primary product docs identify these as issued assets. Keep required watchlist
+// records and distinct governance scenarios while surfacing the evidence gap.
+const issuedAssets: Record<string, string> = { usdd: 'USDD stablecoin', onre: 'ONyc receipt asset' };
 
 function median(numbers: number[]): number {
   const sorted = [...numbers].sort((a, b) => a - b);
@@ -78,14 +81,15 @@ export function buildRadar(snapshot: Snapshot) {
     const ageFactor = age === null || !Number.isFinite(age) ? 0.85 : 0.75 + 0.4 * (1 - Math.exp(-age / 270));
     const growthFactor = Math.exp(clamp(p.change_7d ?? 0, -25, 25) / 100);
     const { multiple, peers } = peersFor(sector(p));
-    const review = nonStandalone.test(sector(p)) || wrappedName.test(p.name) || /staking|restaking|wrapper/i.test(sector(p));
+    const issuedAsset = issuedAssets[p.slug] ?? null;
+    const review = Boolean(issuedAsset) || nonStandalone.test(sector(p)) || wrappedName.test(p.name) || /staking|restaking|wrapper/i.test(sector(p));
     const status = watchlist.has(p.slug) ? 'watchlist' : 'early';
     const base = Math.max(1, Math.round(p.tvl_usd * multiple * ageFactor * growthFactor));
     const coverage = (age !== null ? 1 : 0) + (p.change_7d !== null ? 1 : 0) + (peers >= 5 ? 1 : 0);
     const band = review || coverage < 2 ? 2.2 : coverage === 2 ? 1.85 : 1.5;
     return {
       slug: p.slug, name: p.name, category: sector(p), chains: p.chains, tvl: p.tvl_usd,
-      growth: p.change_7d, age, ageFactor, growthFactor, multiple, peers, review, status,
+      growth: p.change_7d, age, ageFactor, growthFactor, multiple, peers, review, issuedAsset, status,
       value: base, band,
       route: routeFor(p),
     };
@@ -93,10 +97,15 @@ export function buildRadar(snapshot: Snapshot) {
 
   scored.sort((a, b) => b.value - a.value || (a.slug < b.slug ? -1 : 1));
   const ranked = scored.map((row, index) => ({ ...row, rank: index + 1 }));
-  const comparables = snapshot.protocols.filter(live)
+  const traded = snapshot.protocols.filter(live);
+  const comparables = traded
     .sort((a, b) => (b.mcap_usd ?? 0) - (a.mcap_usd ?? 0) || (a.slug < b.slug ? -1 : 1))
     .slice(0, 30)
     .map(p => ({ name: p.name, category: sector(p), symbol: p.symbol, tvl: p.tvl_usd, mcap: p.mcap_usd }));
 
-  return { asOf: snapshot.as_of, floor: snapshot.floor_usd, scanned: snapshot.protocols.length, watch: watchlist.size, ranked, comparables };
+  return {
+    asOf: snapshot.as_of, floor: snapshot.floor_usd, scanned: snapshot.protocols.length,
+    watch: watchlist.size, watchCovered: ranked.filter(row => row.status === 'watchlist').length,
+    tradedCount: traded.length, ranked, comparables,
+  };
 }

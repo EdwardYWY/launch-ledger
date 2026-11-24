@@ -40,19 +40,26 @@ mkdirSync(output, { recursive: true });
 const dashboard = join(output, 'dashboard');
 cpSync(join(root, 'dashboard'), dashboard, { recursive: true });
 const { ranked, ...metadata } = radar;
-const fields = (Object.keys(ranked[0]) as (keyof (typeof ranked)[number])[]).filter(field => field !== 'rank');
+const fields = (Object.keys(ranked[0]) as (keyof (typeof ranked)[number])[])
+  .filter(field => field !== 'rank' && field !== 'issuedAsset');
 const categories = [...new Set(ranked.map(row => row.category))];
 const chains = [...new Set(ranked.flatMap(row => row.chains))];
+const routes = [...new Set(ranked.map(row => row.route))];
 const categoryIds = new Map(categories.map((name, index) => [name, index]));
 const chainIds = new Map(chains.map((name, index) => [name, index]));
+const issuedAssets = Object.fromEntries(ranked.filter(row => row.issuedAsset).map(row => [row.slug, row.issuedAsset]));
 const asJson = (data: unknown) => JSON.stringify(data, (_, value) =>
-  typeof value === 'number' && !Number.isInteger(value) ? Number(value.toFixed(5)) : value).replace(/</g, '\\u003c');
+  typeof value === 'number' && !Number.isInteger(value) ? Number(value.toFixed(4)) : value).replace(/</g, '\\u003c');
 const records = ranked.map(row => {
-  const packed = { ...row, category: categoryIds.get(row.category), chains: row.chains.map(chain => chainIds.get(chain)) };
+  const packed = {
+    ...row, category: categoryIds.get(row.category), chains: row.chains.map(chain => chainIds.get(chain)),
+    route: routes.indexOf(row.route), status: row.status === 'watchlist' ? 1 : 0,
+  };
   return asJson(fields.map(field => packed[field]));
 });
+const comparables = radar.comparables.map(({ name, category, symbol, tvl, mcap }) => [name, category, symbol, tvl, mcap]);
 writeFileSync(join(dashboard, 'z-data.js'),
-  `globalThis.launchData = ${asJson({ ...metadata, categories, chains })};\n` +
+  `globalThis.launchData = ${asJson({ ...metadata, categories, chains, routes, issuedAssets, comparables })};\n` +
   `globalThis.launchFields = ${asJson(fields)};\n` +
   `globalThis.launchRecords = [\n${records.join(',\n')}\n];\n`);
 writeFileSync(join(output, 'board.json'), JSON.stringify({ as_of: snapshot.as_of, rows }) + '\n');

@@ -58,11 +58,13 @@ nav button:hover, nav button[aria-current] { color: #fff; border-bottom-color: #
 .filters label { min-width: 145px; display: grid; gap: 4px; color: var(--muted); font-size: 12px; }
 .filters .search { min-width: 220px; flex: .6; }
 .filters input, .filters select { color: var(--ink); padding: 7px 9px; width: 100%; min-height: 35px; border-radius: 5px; border: 1px solid #c4d3e2; background: var(--paper); }
+.filters .check { display: flex; align-items: center; min-width: 0; min-height: 35px; gap: 5px; white-space: nowrap; }
+.check input { width: 15px; min-height: auto; accent-color: var(--blue); }
 .quiet, .pages button, .back { border: 1px solid var(--line); border-radius: 5px; background: var(--paper); padding: 7px 12px; color: var(--blue); font-size: 12px; font-weight: 600; white-space: nowrap; }
 .quiet:hover, .pages button:not(:disabled):hover, .back:hover { background: var(--wash); }
 .tableScroll { position: relative; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
-th, td { padding: 8px 12px; border-bottom: 1px solid #e5ebf2; }
+th, td { padding: 7px 12px; border-bottom: 1px solid #e5ebf2; }
 th { background: #f6f8fb; color: #42566b; font-weight: 600; font-size: 12px; border-top: 1px solid var(--line); }
 th button { display: inline-flex; align-items: center; gap: 5px; border: 0; padding: 0; background: transparent; color: inherit; font-weight: inherit; }
 th[aria-sort], th button:hover { color: var(--blue); }
@@ -111,6 +113,18 @@ td.rankCol { font: 13px var(--mono); }
 .factors dt { font-size: 12px; }
 .factors dd { margin: 2px 0; font-weight: 650; font-size: 21px; line-height: 1.15; }
 .formula { font-size: 12px; }
+.range { display: flex; justify-content: space-between; margin-top: 18px; border-top: 3px solid #c7dbf2; font-size: 12px; }
+.range div { position: relative; padding-top: 8px; }
+.range div:nth-child(2) { text-align: center; color: var(--blue); }
+.range div:last-child { text-align: right; }
+.range div::before { position: absolute; top: -5px; left: 0; content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--blue); }
+.range div:nth-child(2)::before { left: calc(50% - 3px); }
+.range div:last-child::before { left: auto; right: 0; }
+.range dt { color: var(--muted); }
+.range dd { margin: 0; font-weight: 700; }
+.sensitivity { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+.sensitivity input { min-width: 55px; width: 100%; accent-color: var(--blue); }
+.sensitivity output { min-width: 93px; text-align: right; color: var(--blue); font-variant-numeric: tabular-nums; }
 .risk h2 { font-size: 16px; }
 @media (max-width: 900px) {
   .topbar { gap: 16px; flex-wrap: wrap; padding: 10px 16px 0; }
@@ -129,6 +143,6 @@ td.rankCol { font: 13px var(--mono); }
   .methodGrid { grid-template-columns: 1fr; }
   .boardTop, .filters, .tableFoot { padding-inline: 12px; }
   .segments button { padding-inline: 6px; }
-  .stats { gap: 8px; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .stats div { padding-left: 8px; }
 }

@@ -95,6 +95,21 @@
       follow: 'Record the share exchange rate and exit asset. Compare both after seven days and check whether a rate update or a queue could change the simulated exit date.',
       exit: 'Preview a full on-chain withdrawal. For a queued route, record the target asset, deadline, relevant fee and the procedure for cancellation.',
     },
+    upshift: {
+      action: 'Find an open Upshift vault in the deployment registry. Record its underlying asset, the curator’s whitelist and whether instant redemption is enabled.',
+      follow: 'Record the previewDeposit and previewRedeem quotes for a paper position. Recheck the share ratio, vault allocations and liquidity buffer after seven days.',
+      exit: 'Compare instant redemption after its fee with requesting an epoch redemption. Record the claimable epoch and count the request and claim transactions separately.',
+    },
+    usdd: {
+      action: 'Use the USDD collateral dashboard to compare available vaults on Tron. Record the stability fee, collateral threshold and whether the asset you are testing is the already-issued USDD stablecoin.',
+      follow: 'Track the USDD peg and collateral ratio in a paper vault. Simulate a 20% drop in collateral value and check the remaining liquidation buffer.',
+      exit: 'Model repaying minted USDD plus accrued stability fees and reclaiming all collateral. Add transaction fees and a potentially adverse conversion spread.',
+    },
+    onre: {
+      action: 'Read the ONyc investor and redemption terms. Separate the existing tokenized reinsurance exposure from a possible governance launch.',
+      follow: 'Record ONyc NAV and a same-size secondary quote on Solana across seven days. Compare the spread and available depth with the primary redemption terms.',
+      exit: 'Check qualification before modeling primary redemption and record the published wait. If you can use only the secondary route, simulate a full-size quote without trading.',
+    },
   };
 
   function plan(row) {

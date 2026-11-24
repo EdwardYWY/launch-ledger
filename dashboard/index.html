@@ -31,7 +31,7 @@
       </div>
       <section class="boardCard" aria-labelledby="rank-heading">
         <div class="boardTop">
-          <div><h2 id="rank-heading">Ranked protocols</h2><p>USD · implied circulating market cap if a token launches</p></div>
+          <div><h2 id="rank-heading">Ranked protocols</h2><p id="board-note"></p></div>
           <div class="segments" role="group" aria-label="Protocol scope">
             <button data-scope="all" aria-pressed="true">All candidates</button>
             <button data-scope="watchlist" aria-pressed="false">Watchlist</button>
@@ -42,6 +42,7 @@
           <label class="search"><span>Search</span><input id="query" type="search" placeholder="Name, sector or network"></label>
           <label><span>Sector</span><select id="sector"><option value="">All sectors</option></select></label>
           <label><span>Network</span><select id="network"><option value="">All networks</option></select></label>
+          <label class="check"><input id="hide-flags" type="checkbox"> Hide review flags</label>
           <button id="reset" class="quiet">Clear filters</button>
         </div>
         <div class="tableScroll">
@@ -66,7 +67,7 @@
     </section>
     <section id="detail" hidden aria-labelledby="detail-heading"></section>
     <section id="peers" hidden>
-      <div class="hero"><div><h1>Traded peers</h1><p>The largest circulating market caps among token-bearing protocols in the snapshot. These records inform sector multiples and sit outside the launch ranking.</p></div></div>
+      <div class="hero"><div><h1>Traded peers</h1><p id="peer-note"></p></div></div>
       <section class="boardCard tableScroll" aria-label="Traded comparables">
         <table><thead><tr><th scope="col">Protocol</th><th scope="col">Sector</th><th scope="col" class="num">TVL</th><th scope="col" class="num">Market cap</th></tr></thead><tbody id="peer-rows"></tbody></table>
       </section>
@@ -74,7 +75,7 @@
     <section id="method" hidden>
       <div class="hero"><div><h1>Methodology</h1><p>Every estimate uses the same sealed snapshot. Coverage, assumptions and the size of the scenario range are visible for each candidate.</p></div></div>
       <div class="methodGrid">
-        <article class="panel"><h2>Selection</h2><p>All official watchlist records are retained, with derivative-like categories flagged for review. Beyond the watchlist, token identifiers, exchange products, wrappers and obvious versioned routes are screened out. Traded records have their own view.</p></article>
+        <article class="panel"><h2>Selection</h2><p id="method-note"></p></article>
         <article class="panel"><h2>Valuation</h2><p>TVL × peer multiple × age factor × momentum factor. The peer multiple blends the sector median market-cap-to-TVL ratio with the global median using geometric weights. Sector weight is n/(n+8), and individual ratios are clipped to 0.05–8×.</p></article>
         <article class="panel"><h2>Time and momentum</h2><p>The age factor rises from 0.75 to 1.15 with days tracked, using an exponential curve with a 270-day scale. Missing age uses 0.85. The momentum factor exponentiates weekly TVL change clipped at ±25%, with a neutral multiplier when the field is missing.</p></article>
         <article class="panel"><h2>Scenario range</h2><p>The central estimate is divided and multiplied by a 1.5–2.2× band. Missing inputs, fewer than five sector peers or a review flag widen it. The range shows uncertainty in the valuation assumptions. Listing dates measure tracking history, and token metadata can be incomplete.</p></article>
