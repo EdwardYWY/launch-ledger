@@ -7,6 +7,12 @@
     pick('#error').hidden = false;
     return;
   }
+  function valueFor(row, tvl = row.tvl) {
+    const { sectors, globalMedian } = data.references;
+    const sample = Object.hasOwn(sectors, row.category) ? sectors[row.category] : undefined;
+    return globalThis.launchValue(tvl, row.age, row.growth, sample, globalMedian);
+  }
+
   data.ranked = globalThis.launchRecords.map((record, index) => {
     const row = Object.fromEntries(globalThis.launchFields.map((field, column) => [field, record[column]]));
     row.category = data.categories[row.category];
@@ -15,6 +21,7 @@
     row.status = row.status ? 'watchlist' : 'early';
     row.rank = index + 1;
     row.issuedAsset = Object.hasOwn(data.issuedAssets, row.slug) ? data.issuedAssets[row.slug] : null;
+    Object.assign(row, valueFor(row));
     row.low = Math.max(1, Math.round(row.value / row.band));
     row.high = Math.round(row.value * row.band);
     return row;
@@ -114,6 +121,7 @@
 
   const factor = (label, value, caption) => `<div><dt>${label}</dt><dd>${value}</dd><small>${caption}</small></div>`;
   const multiple = value => value.toFixed(2) + '×';
+  const precise = value => value.toFixed(8);
 
   function showDetail(row) {
     const plan = globalThis.launchPlan(row);
@@ -129,19 +137,19 @@
       <div class="detailGrid">
         <article class="panel">
           <h2>Farm research plan</h2>
-          <div class="planMeta"><span>${safe(plan.time)}</span><span>${safe(plan.cost)}</span></div>
-          <ol class="steps">${plan.steps.map((step, i) => `<li><h3>${stepNames[i]}</h3><p>${safe(step)}</p></li>`).join('')}</ol>
+          <ol class="steps">${plan.steps.map((step, i) => `<li><div class="stepHead"><h3>${stepNames[i]}</h3><small>${safe(step.time)}</small></div><p>${safe(step.action)}</p><small class="cost">${safe(step.cost)}</small></li>`).join('')}</ol>
         </article>
         <div class="detailSide">
           <article class="panel">
             <h2>Value breakdown</h2>
             <dl class="factors">
               ${factor('Snapshot TVL', money(row.tvl), 'Starting scale')}
-              ${factor('Peer multiple', multiple(row.multiple), `${row.peers} sector comparable${row.peers === 1 ? '' : 's'} · blended with global median`)}
+              ${factor('Peer multiple', multiple(row.multiple), `${row.count} sector comparable${row.count === 1 ? '' : 's'} · ${Math.round(row.weight * 100)}% weight`)}
               ${factor('Age factor', multiple(row.ageFactor), row.age == null ? 'Tracking age missing' : integer.format(row.age) + ' days tracked')}
               ${factor('Momentum factor', multiple(row.growthFactor), growth(row.growth) + ' weekly change in TVL')}
             </dl>
-            <p class="formula">TVL × peer multiple × age × momentum</p>
+            <p class="formula">Peer medians ${multiple(row.sectorMedian)} sector · ${multiple(row.globalMedian)} global (${data.references.globalCount} records)</p>
+            <p class="formula exact">$${integer.format(row.tvl)} × ${precise(row.multiple)} × ${precise(row.ageFactor)} × ${precise(row.growthFactor)} ≈ <strong>$${integer.format(row.value)}</strong></p>
             <dl class="range" aria-label="Valuation scenarios">
               <div><dt>Lower</dt><dd>${money(row.low)}</dd></div>
               <div><dt>Base</dt><dd>${money(row.value)}</dd></div>
@@ -158,7 +166,8 @@
     });
     pick('#sensitivity').addEventListener('input', event => {
       const change = event.target.valueAsNumber;
-      pick('#sensitivity-result').value = `${change > 0 ? '+' : ''}${change}% · ${money(row.value * (1 + change / 100))}`;
+      const scenario = valueFor(row, row.tvl * (1 + change / 100));
+      pick('#sensitivity-result').value = `${change > 0 ? '+' : ''}${change}% · ${money(scenario.value)}`;
     });
     activate('detail');
     pick('#detail-heading').focus();

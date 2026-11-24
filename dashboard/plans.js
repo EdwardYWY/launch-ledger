@@ -113,17 +113,17 @@
   };
 
   function plan(row) {
-    const route = { ...routes[row.route], ...research[row.slug] };
+    const detail = Object.hasOwn(research, row.slug) ? research[row.slug] : undefined;
+    const route = { ...routes[row.route], ...detail };
     const chain = row.chains.slice(0, 2).join(' or ') || 'a documented network';
+    const observation = route.time.split(' · ')[1];
     return {
-      time: route.time,
-      cost: route.cost,
       risk: route.risk,
       steps: [
-        `Open the official ${row.name} docs and confirm the route on ${chain}. Check eligibility, points terms and whether the app identifies an existing token. Allow five minutes.`,
-        route.action,
-        route.follow,
-        route.exit,
+        { action: `Open the official ${row.name} docs and confirm the route on ${chain}. Check eligibility, points terms and existing token information.`, time: '5 min', cost: '$0 for documentation review' },
+        { action: route.action, time: '10–20 min', cost: route.cost },
+        { action: route.follow, time: observation, cost: '$0 for monitoring or the paper trial' },
+        { action: route.exit, time: '10 min to model the exit', cost: '$0 to preview. Record redemption fees and the network quote for a live exit' },
       ],
     };
   }

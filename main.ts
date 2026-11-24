@@ -16,14 +16,16 @@ const output = option('--output', process.env.MAKEFUN_OUTPUT_DIR ?? '/output');
 const inputFile = input.endsWith('.json') ? input : join(input, 'snapshot.json');
 const snapshot = JSON.parse(readFileSync(inputFile, 'utf8')) as Snapshot;
 const radar = buildRadar(snapshot);
-const plan = (globalThis as typeof globalThis & { launchPlan: (row: (typeof radar.ranked)[number]) => { steps: string[] } }).launchPlan;
+const plan = (globalThis as typeof globalThis & {
+  launchPlan: (row: (typeof radar.ranked)[number]) => { steps: { action: string; time: string; cost: string }[] };
+}).launchPlan;
 
 const rows = radar.ranked.map(row => ({
   slug: row.slug,
   name: row.name,
   rank: row.rank,
   implied_value_usd: row.value,
-  farm_steps: plan(row).steps,
+  farm_steps: plan(row).steps.map(step => `${step.action} Time ${step.time}. Cost ${step.cost}.`),
 }));
 const rankedSlugs = new Set(rows.map(row => row.slug));
 if (rows.length < 100 || rows.length > 4_000 || rankedSlugs.size !== rows.length || snapshot.watchlist.some(slug => !rankedSlugs.has(slug))) {
@@ -41,15 +43,14 @@ const dashboard = join(output, 'dashboard');
 cpSync(join(root, 'dashboard'), dashboard, { recursive: true });
 const { ranked, ...metadata } = radar;
 const fields = (Object.keys(ranked[0]) as (keyof (typeof ranked)[number])[])
-  .filter(field => field !== 'rank' && field !== 'issuedAsset');
+  .filter(field => field !== 'rank' && field !== 'issuedAsset' && field !== 'value');
 const categories = [...new Set(ranked.map(row => row.category))];
 const chains = [...new Set(ranked.flatMap(row => row.chains))];
 const routes = [...new Set(ranked.map(row => row.route))];
 const categoryIds = new Map(categories.map((name, index) => [name, index]));
 const chainIds = new Map(chains.map((name, index) => [name, index]));
 const issuedAssets = Object.fromEntries(ranked.filter(row => row.issuedAsset).map(row => [row.slug, row.issuedAsset]));
-const asJson = (data: unknown) => JSON.stringify(data, (_, value) =>
-  typeof value === 'number' && !Number.isInteger(value) ? Number(value.toFixed(4)) : value).replace(/</g, '\\u003c');
+const asJson = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 const records = ranked.map(row => {
   const packed = {
     ...row, category: categoryIds.get(row.category), chains: row.chains.map(chain => chainIds.get(chain)),

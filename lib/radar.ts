@@ -1,3 +1,5 @@
+import '../dashboard/valuation.js';
+
 export interface Protocol {
   slug: string;
   name: string;
@@ -19,6 +21,11 @@ export interface Snapshot {
 }
 
 type Route = 'vault' | 'lending' | 'exchange' | 'derivatives' | 'prediction' | 'rwa' | 'cdp' | 'security' | 'network';
+interface PeerSample { count: number; median: number }
+interface ValueFactors { value: number; count: number }
+const launchValue = (globalThis as typeof globalThis & {
+  launchValue: (tvl: number, age: number | null, change: number | null, sample: PeerSample | undefined, globalMedian: number) => ValueFactors;
+}).launchValue;
 
 const day = 86_400_000;
 const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));
@@ -47,12 +54,10 @@ function comparableMultiples(protocols: Protocol[]) {
     groups.set(sector(p), group);
     pool.push(ratio);
   }
-  const global = pool.length ? median(pool) : 0.5;
-  return (name: string) => {
-    const peers = groups.get(name) ?? [];
-    const weight = peers.length / (peers.length + 8);
-    const multiple = peers.length ? Math.exp(weight * Math.log(median(peers)) + (1 - weight) * Math.log(global)) : global;
-    return { multiple, peers: peers.length };
+  return {
+    globalMedian: pool.length ? median(pool) : 0.5,
+    globalCount: pool.length,
+    sectors: Object.fromEntries([...groups].map(([name, peers]) => [name, { count: peers.length, median: median(peers) }])),
   };
 }
 
@@ -71,26 +76,25 @@ function routeFor(p: Protocol): Route {
 
 export function buildRadar(snapshot: Snapshot) {
   const watchlist = new Set(snapshot.watchlist);
-  const peersFor = comparableMultiples(snapshot.protocols);
+  const references = comparableMultiples(snapshot.protocols);
   const cutoff = Date.parse(snapshot.as_of);
   const candidates = snapshot.protocols.filter(p =>
     watchlist.has(p.slug) || (!live(p) && !nonStandalone.test(sector(p)) && !wrappedName.test(p.name)));
 
   const scored = candidates.map(p => {
-    const age = p.listed_at ? Math.max(0, Math.floor((cutoff - Date.parse(p.listed_at)) / day)) : null;
-    const ageFactor = age === null || !Number.isFinite(age) ? 0.85 : 0.75 + 0.4 * (1 - Math.exp(-age / 270));
-    const growthFactor = Math.exp(clamp(p.change_7d ?? 0, -25, 25) / 100);
-    const { multiple, peers } = peersFor(sector(p));
+    const listed = Date.parse(p.listed_at ?? '');
+    const age = Number.isFinite(listed) ? Math.max(0, Math.floor((cutoff - listed) / day)) : null;
+    const name = sector(p);
+    const sample = Object.hasOwn(references.sectors, name) ? references.sectors[name] : undefined;
+    const { value, count } = launchValue(p.tvl_usd, age, p.change_7d, sample, references.globalMedian);
     const issuedAsset = issuedAssets[p.slug] ?? null;
     const review = Boolean(issuedAsset) || nonStandalone.test(sector(p)) || wrappedName.test(p.name) || /staking|restaking|wrapper/i.test(sector(p));
     const status = watchlist.has(p.slug) ? 'watchlist' : 'early';
-    const base = Math.max(1, Math.round(p.tvl_usd * multiple * ageFactor * growthFactor));
-    const coverage = (age !== null ? 1 : 0) + (p.change_7d !== null ? 1 : 0) + (peers >= 5 ? 1 : 0);
+    const coverage = (age !== null ? 1 : 0) + (p.change_7d !== null ? 1 : 0) + (count >= 5 ? 1 : 0);
     const band = review || coverage < 2 ? 2.2 : coverage === 2 ? 1.85 : 1.5;
     return {
-      slug: p.slug, name: p.name, category: sector(p), chains: p.chains, tvl: p.tvl_usd,
-      growth: p.change_7d, age, ageFactor, growthFactor, multiple, peers, review, issuedAsset, status,
-      value: base, band,
+      slug: p.slug, name: p.name, category: name, chains: p.chains, tvl: p.tvl_usd,
+      growth: p.change_7d, age, review, issuedAsset, status, value, band,
       route: routeFor(p),
     };
   });
@@ -106,6 +110,6 @@ export function buildRadar(snapshot: Snapshot) {
   return {
     asOf: snapshot.as_of, floor: snapshot.floor_usd, scanned: snapshot.protocols.length,
     watch: watchlist.size, watchCovered: ranked.filter(row => row.status === 'watchlist').length,
-    tradedCount: traded.length, ranked, comparables,
+    tradedCount: traded.length, references, ranked, comparables,
   };
 }
