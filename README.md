@@ -16,6 +16,8 @@ node main.ts --input /path/to/snapshot.json --output out
 
 Open `out/dashboard/index.html` directly in a browser. The output includes the ranked `board.json`, three screenshots, and the make.fun `dossier.json`. Use `--preview` when regenerating the dashboard and board before capturing updated screenshots.
 
+Filter the radar and choose **Compare top two** to evaluate the leading matches under a shared TVL change, with each scenario band and route-preview cost visible.
+
 ## How it ranks
 
 Each central estimate multiplies TVL by a peer multiple, a tracking-age factor, and a bounded seven-day TVL momentum factor. The peer multiple blends sector and global medians to reduce the influence of sparse sectors. The same function calculates each value for the grader, the offline dashboard, and its TVL sensitivity control. Traded peers have a separate view. The range widens when evidence is thin or classification needs review. These estimates describe a hypothetical circulating market cap if a token launches.

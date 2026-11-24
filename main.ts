@@ -54,7 +54,7 @@ const asJson = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 const records = ranked.map(row => {
   const packed = {
     ...row, category: categoryIds.get(row.category), chains: row.chains.map(chain => chainIds.get(chain)),
-    route: routes.indexOf(row.route), status: row.status === 'watchlist' ? 1 : 0,
+    route: routes.indexOf(row.route), status: row.status === 'watchlist' ? 1 : 0, review: row.review ? 1 : 0,
   };
   return asJson(fields.map(field => packed[field]));
 });

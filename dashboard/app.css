@@ -86,7 +86,7 @@ td.rankCol { font: 13px var(--mono); }
 .review { color: #84550a; margin-top: 4px; }
 .navCol { text-align: right; width: 34px; color: #52769a; }
 .tableFoot { padding-top: 11px; padding-bottom: 11px; color: var(--muted); font-size: 12px; }
-.pages { display: flex; align-items: center; gap: 10px; font-variant-numeric: tabular-nums; }
+.pages, .resultActions { display: flex; align-items: center; gap: 10px; font-variant-numeric: tabular-nums; }
 .empty { padding: 42px 20px; text-align: center; color: var(--muted); }
 .back { margin-top: 22px; }
 .detailHero { align-items: center; padding-top: 16px; }
@@ -127,6 +127,16 @@ td.rankCol { font: 13px var(--mono); }
 .sensitivity { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-top: 12px; font-size: 12px; color: var(--muted); }
 .sensitivity input { min-width: 55px; width: 100%; accent-color: var(--blue); }
 .sensitivity output { min-width: 93px; text-align: right; color: var(--blue); font-variant-numeric: tabular-nums; }
+.compareControls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.3fr); gap: 16px; margin-bottom: 16px; }
+.compareControls label { color: var(--muted); font-size: 13px; }
+.compareControls select { display: block; width: 100%; margin-top: 5px; padding: 7px; border: 1px solid var(--line); border-radius: 5px; background: var(--paper); color: var(--ink); }
+.compareControls .sensitivity { margin-top: 0; }
+.compareControls output { min-width: 27px; }
+.comparedValue { display: flex; gap: 12px; align-items: baseline; margin-top: 10px; }
+.comparedValue strong { font-size: 30px; line-height: 1.2; letter-spacing: -.025em; }
+.comparedValue span { font-size: 12px; color: var(--muted); }
+.compareCard meter { width: 100%; accent-color: var(--blue); }
+.compareCard meter::-webkit-meter-optimum-value { background: var(--blue); }
 .risk h2 { font-size: 16px; }
 @media (max-width: 900px) {
   .topbar { gap: 16px; flex-wrap: wrap; padding: 10px 16px 0; }
@@ -143,7 +153,10 @@ td.rankCol { font: 13px var(--mono); }
   .filters .search { grid-column: 1 / -1; min-width: 0; }
   .filters label { min-width: 0; }
   .methodGrid { grid-template-columns: 1fr; }
+  .compareControls { grid-template-columns: minmax(0, 1fr); }
   .boardTop, .filters, .tableFoot { padding-inline: 12px; }
+  .tableFoot, .resultActions { flex-wrap: wrap; }
+  nav { gap: 12px; }
   .segments button { padding-inline: 6px; }
   .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .stats div { padding-left: 8px; }

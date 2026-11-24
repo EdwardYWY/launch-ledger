@@ -19,6 +19,7 @@
     row.chains = row.chains.map(index => data.chains[index]);
     row.route = data.routes[row.route];
     row.status = row.status ? 'watchlist' : 'early';
+    row.review = Boolean(row.review);
     row.rank = index + 1;
     row.issuedAsset = Object.hasOwn(data.issuedAssets, row.slug) ? data.issuedAssets[row.slug] : null;
     Object.assign(row, valueFor(row));
@@ -41,7 +42,7 @@
   const rowBySlug = new Map(data.ranked.map(row => [row.slug, row]));
   const scope = all('[data-scope]');
   const sort = all('[data-sort]');
-  const views = ['board', 'detail', 'peers', 'method'];
+  const views = ['board', 'detail', 'compare', 'peers', 'method'];
 
   pick('#date').textContent = data.asOf;
   pick('#stats').innerHTML = stat(integer.format(data.scanned), 'Records scanned') +
@@ -107,6 +108,10 @@
     pick('#rows').innerHTML = shown.length ? shown.slice(start, start + pageSize).map(row => rowMarkup(row, network)).join('') :
       '<tr><td colspan="7" class="empty">No matching protocols. Change a filter to widen the search.</td></tr>';
     pick('#results').textContent = shown.length ? `${start + 1}–${Math.min(start + pageSize, shown.length)} of ${shown.length} protocols` : '0 protocols';
+    const compareButton = pick('#compare-results-button');
+    compareButton.disabled = shown.length < 2;
+    compareButton.dataset.first = shown[0]?.slug ?? '';
+    compareButton.dataset.second = shown[1]?.slug ?? '';
     pick('#page').textContent = `${state.page + 1} / ${pages}`;
     pick('#prev').disabled = state.page === 0;
     pick('#next').disabled = state.page >= pages - 1;
@@ -122,6 +127,46 @@
   const factor = (label, value, caption) => `<div><dt>${label}</dt><dd>${value}</dd><small>${caption}</small></div>`;
   const multiple = value => value.toFixed(2) + '×';
   const precise = value => value.toFixed(8);
+  const signedPercent = value => `${value > 0 ? '+' : ''}${value}%`;
+
+  function renderComparison() {
+    const change = pick('#compare-shock').valueAsNumber;
+    const rows = all('#compare-first, #compare-second').map(input => rowBySlug.get(input.value));
+    const scenarios = rows.map(row => valueFor(row, row.tvl * (1 + change / 100)));
+    const largest = Math.max(...scenarios.map(scenario => scenario.value));
+    pick('#compare-change').value = signedPercent(change);
+    pick('#compare-results').innerHTML = rows.map((row, index) => {
+      const { value } = scenarios[index];
+      const plan = globalThis.launchPlan(row);
+      return `<article class="panel compareCard">
+        <p class="detailMeta"><span class="pill ${row.status}">${labels[row.status]}</span> Rank ${row.rank} · ${safe(row.category)}</p>
+        <h2>${safe(row.name)}</h2>
+        <div class="comparedValue"><strong>${money(value)}</strong><span>At ${signedPercent(change)} TVL</span></div>
+        <meter min="0" max="${largest}" value="${value}" aria-label="Implied value on the shared scale"></meter>
+        <dl class="factors">
+          ${factor('Base estimate', money(row.value), 'Unchanged TVL')}
+          ${factor('Scenario band', `${money(value / row.band)}–${money(value * row.band)}`, 'Lower to upper')}
+        </dl>
+        <p><strong>Route preview</strong> · ${safe(plan.steps[1].time)} · ${safe(plan.steps[1].cost)}</p>
+        <p><strong>Review</strong> · ${safe(row.issuedAsset ?? plan.risk)}</p>
+      </article>`;
+    }).join('');
+  }
+
+  for (const field of all('#compare-first, #compare-second')) {
+    for (const row of data.ranked) field.add(new Option(`${row.rank} · ${row.name}`, row.slug));
+    field.addEventListener('change', renderComparison);
+  }
+  pick('#compare-second').value = (data.ranked.find(row => row.category !== data.ranked[0].category) ?? data.ranked[1]).slug;
+  pick('#compare-shock').addEventListener('input', renderComparison);
+  pick('#compare-results-button').addEventListener('click', event => {
+    pick('#compare-first').value = event.currentTarget.dataset.first;
+    pick('#compare-second').value = event.currentTarget.dataset.second;
+    renderComparison();
+    activate('compare');
+    pick('#compare-first').focus();
+  });
+  renderComparison();
 
   function showDetail(row) {
     const plan = globalThis.launchPlan(row);
@@ -167,7 +212,7 @@
     pick('#sensitivity').addEventListener('input', event => {
       const change = event.target.valueAsNumber;
       const scenario = valueFor(row, row.tvl * (1 + change / 100));
-      pick('#sensitivity-result').value = `${change > 0 ? '+' : ''}${change}% · ${money(scenario.value)}`;
+      pick('#sensitivity-result').value = `${signedPercent(change)} · ${money(scenario.value)}`;
     });
     activate('detail');
     pick('#detail-heading').focus();

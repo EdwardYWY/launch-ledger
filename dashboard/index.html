@@ -16,6 +16,7 @@
     <div class="identity"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Launch Ledger</div>
     <nav aria-label="Views">
       <button data-view="board" aria-current="page">Radar</button>
+      <button data-view="compare">Compare</button>
       <button data-view="peers">Traded peers</button>
       <button data-view="method">Methodology</button>
     </nav>
@@ -61,12 +62,21 @@
           </table>
         </div>
         <div class="tableFoot">
-          <span id="results" aria-live="polite"></span>
+          <div class="resultActions"><span id="results" aria-live="polite"></span><button id="compare-results-button" class="quiet">Compare top two</button></div>
           <div class="pages"><button id="prev">Previous</button><span id="page"></span><button id="next">Next</button></div>
         </div>
       </section>
     </section>
     <section id="detail" hidden aria-labelledby="detail-heading"></section>
+    <section id="compare" hidden aria-labelledby="compare-heading">
+      <div class="hero"><div><h1 id="compare-heading">Compare launch scenarios</h1><p>Apply the same TVL change to two candidates. Compare the resulting values, valuation ranges and research costs.</p></div></div>
+      <div class="panel compareControls">
+        <label>First candidate <select id="compare-first"></select></label>
+        <label>Second candidate <select id="compare-second"></select></label>
+        <label class="sensitivity">Shared TVL change <input id="compare-shock" type="range" min="-30" max="30" step="5" value="0"><output id="compare-change" for="compare-shock">0%</output></label>
+      </div>
+      <div id="compare-results" class="methodGrid"></div>
+    </section>
     <section id="peers" hidden>
       <div class="hero"><div><h1>Traded peers</h1><p id="peer-note"></p></div></div>
       <section class="boardCard tableScroll" aria-label="Traded comparables">
